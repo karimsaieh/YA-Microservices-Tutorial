@@ -1,0 +1,24 @@
+version: '3'
+services:
+  config-service:
+    image: karimsaieh/homework_config-service
+    ports: 
+     - "8888:8888"
+  discovery-service:
+    image: karimsaieh/homework_discovery-service
+    ports: 
+     - "8761:8761"
+    depends_on:
+      - config-service
+    entrypoint: /wait-for-it.sh config-service:8888 -t 3000 --
+    command: java -jar /usr/app/discovery-service-0.0.1-SNAPSHOT.jar --spring.profiles.active=docker
+  product-service:
+    image: karimsaieh/homework_product-service
+    ports: 
+     - "8080:8080"
+    deploy:
+      replicas: 4
+    depends_on:
+      - discovery-service
+    entrypoint: /wait-for-it.sh discovery-service:8761 -t 3000 --
+    command: java -jar /usr/app/product-service-0.0.1-SNAPSHOT.jar --spring.profiles.active=docker
